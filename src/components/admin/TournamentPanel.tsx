@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { useFeedback } from "@/lib/feedback";
 import { updateTournamentSettings } from "@/app/actions/admin";
 import { MatchResultRow } from "./MatchResultRow";
-import { ROUNDS } from "@/lib/bracket";
-import { ROUND_LABEL } from "@/lib/scoring";
+import { roundsForSize } from "@/lib/bracket";
+import { roundLabel } from "@/lib/scoring";
 import type { AdminMatch, AdminTournament } from "./types";
 
 function toLocalInput(ms: number | null): string {
@@ -111,13 +111,13 @@ export function TournamentPanel({
           Recording a result finalizes the match and sends the winner into the
           next round automatically.
         </p>
-        {ROUNDS.map((round) => {
+        {roundsForSize(tournament.bracketSize).map((round) => {
           const rms = matches
             .filter((m) => m.round === round)
             .sort((a, b) => a.slot - b.slot);
           return (
             <div key={round}>
-              <h4 className="titlecard mb-2 text-base text-star">{ROUND_LABEL[round]}</h4>
+              <h4 className="titlecard mb-2 text-base text-star">{roundLabel(round)}</h4>
               <div className="grid gap-2 sm:grid-cols-2">
                 {rms.map((m) => (
                   <MatchResultRow key={m.id} match={m} />

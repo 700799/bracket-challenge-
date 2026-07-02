@@ -1,40 +1,69 @@
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/session";
 import {
-  getActiveTournament,
+  getAllTournaments,
+  getMemberCounts,
+  getTournamentById,
   getBracketData,
   getSignups,
   getPunishments,
-  getLeaderboard,
+  getScoring,
+  getAnnouncements,
 } from "@/lib/queries";
 import { resolvePunishmentTargets } from "@/lib/punishments";
 import { AdminDashboard } from "@/components/admin/AdminDashboard";
 import type {
+  AdminAnnouncement,
   AdminMatch,
   AdminPunishment,
   AdminSignup,
   AdminTournament,
+  AdminTournamentListItem,
 } from "@/components/admin/types";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminPage() {
-  // Middleware already guards this route; double-check for defense in depth.
+export default async function AdminPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ t?: string }>;
+}) {
   const user = await getSessionUser();
   if (!user) redirect("/login?callbackUrl=/admin");
   if (!user.isAdmin) redirect("/");
 
-  const tournament = await getActiveTournament();
+  const { t: requestedId } = await searchParams;
+
+  const [all, counts] = await Promise.all([getAllTournaments(), getMemberCounts()]);
+  const list: AdminTournamentListItem[] = all.map((t) => ({
+    id: t.id,
+    name: t.name,
+    bracketSize: t.bracketSize,
+    status: t.status,
+    visible: t.visible,
+    featured: t.featured,
+    isGeneralPool: t.isGeneralPool,
+    joinPolicy: t.joinPolicy,
+    joinCode: t.joinCode,
+    memberCount: counts.get(t.id) ?? 0,
+  }));
+
+  const selected =
+    (requestedId ? await getTournamentById(requestedId) : null) ?? all[0] ?? null;
 
   let tVM: AdminTournament | null = null;
   let matchVMs: AdminMatch[] = [];
   let punishmentVMs: AdminPunishment[] = [];
+  let signups: AdminSignup[] = [];
+  let announcements: AdminAnnouncement[] = [];
 
-  if (tournament) {
-    const { teamsById, matches } = await getBracketData(tournament.id);
-    const [leaderboard, punishments] = await Promise.all([
-      getLeaderboard(tournament.id),
-      getPunishments(tournament.id),
+  if (selected) {
+    const { teamsById, matches } = await getBracketData(selected.id);
+    const [scoring, punishments, signupRows, anns] = await Promise.all([
+      getScoring(selected.id),
+      getPunishments(selected.id),
+      getSignups(selected.id),
+      getAnnouncements(selected.id),
     ]);
 
     const teamRef = (id: string | null) =>
@@ -53,8 +82,7 @@ export default async function AdminPage() {
       status: m.status,
     }));
 
-    const resolved = resolvePunishmentTargets(leaderboard, punishments);
-    punishmentVMs = resolved.map((r) => ({
+    punishmentVMs = resolvePunishmentTargets(scoring.entries, punishments).map((r) => ({
       id: r.punishment.id,
       fromBottom: r.punishment.fromBottom,
       absoluteRank: r.punishment.absoluteRank,
@@ -64,34 +92,43 @@ export default async function AdminPage() {
       targetUsername: r.entry?.username ?? null,
     }));
 
+    signups = signupRows.map((s) => ({
+      userId: s.userId,
+      username: s.username,
+      name: s.name,
+      email: s.email,
+      mascotVariant: s.mascotVariant,
+      joinedAtMs: s.joinedAt.getTime(),
+    }));
+
+    announcements = anns.map((a) => ({
+      id: a.id,
+      body: a.body,
+      emailedCount: a.emailedCount,
+      createdAtMs: a.createdAt.getTime(),
+    }));
+
     tVM = {
-      id: tournament.id,
-      name: tournament.name,
-      status: tournament.status,
-      currentRound: tournament.currentRound,
-      picksDeadlineMs: tournament.picksDeadline?.getTime() ?? null,
-      championName: tournament.championTeamId
-        ? (teamsById.get(tournament.championTeamId)?.name ?? null)
+      id: selected.id,
+      name: selected.name,
+      status: selected.status,
+      currentRound: selected.currentRound,
+      bracketSize: selected.bracketSize,
+      picksDeadlineMs: selected.picksDeadline?.getTime() ?? null,
+      championName: selected.championTeamId
+        ? (teamsById.get(selected.championTeamId)?.name ?? null)
         : null,
     };
   }
 
-  const signupRows = await getSignups();
-  const signups: AdminSignup[] = signupRows.map((s) => ({
-    userId: s.userId,
-    username: s.username,
-    name: s.name,
-    email: s.email,
-    mascotVariant: s.mascotVariant,
-    joinedAtMs: s.joinedAt.getTime(),
-  }));
-
   return (
     <AdminDashboard
-      tournament={tVM}
+      tournaments={list}
+      selected={tVM}
       matches={matchVMs}
       signups={signups}
       punishments={punishmentVMs}
+      announcements={announcements}
     />
   );
 }

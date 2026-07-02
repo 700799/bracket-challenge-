@@ -2,20 +2,26 @@ import { describe, it, expect } from "vitest";
 import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import { eq } from "drizzle-orm";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import * as schema from "@/db/schema";
 import { collectLeaderboard } from "@/lib/leaderboard-query";
 import { buildBracket } from "@/lib/bracket";
 
-/** Fresh in-memory D1-shaped DB built from the real generated migration. */
+/** Fresh in-memory D1-shaped DB built by applying every real migration in order. */
 function makeDb() {
   const sqlite = new Database(":memory:");
-  const sql = readFileSync(
-    resolve("src/db/migrations/0000_init.sql"),
-    "utf8",
-  ).replaceAll("--> statement-breakpoint", ";");
-  sqlite.exec(sql);
+  const dir = resolve("src/db/migrations");
+  const files = readdirSync(dir)
+    .filter((f) => f.endsWith(".sql"))
+    .sort();
+  for (const f of files) {
+    const sql = readFileSync(resolve(dir, f), "utf8").replaceAll(
+      "--> statement-breakpoint",
+      ";",
+    );
+    sqlite.exec(sql);
+  }
   return drizzle(sqlite, { schema });
 }
 
@@ -45,7 +51,7 @@ describe("DB integration: schema + leaderboard pipeline", () => {
 
     // Real bracket wiring.
     let n = 0;
-    const built = buildBracket(teamIds, () => `m${n++}`);
+    const built = buildBracket(teamIds, 16, () => `m${n++}`);
     for (const m of built) {
       await db.insert(schema.matches).values({
         id: m.id,
@@ -73,10 +79,19 @@ describe("DB integration: schema + leaderboard pipeline", () => {
         mascotVariant: "red",
         createdAt: new Date(p.joined),
       });
+      await db.insert(schema.memberships).values({
+        userId: p.id,
+        tournamentId: T,
+        joinedAt: new Date(p.joined),
+      });
     }
 
+    // A non-member who somehow has a prediction must NOT appear on the board.
+    await db.insert(schema.users).values({ id: "u_ghost", name: "Ghost", email: "ghost@x.com" });
+    await db.insert(schema.profiles).values({ userId: "u_ghost", username: "ghost", mascotVariant: "red", createdAt: new Date(50) });
+
     const r16s0 = built.find((m) => m.round === "R16" && m.slot === 0)!;
-    const qf0 = built.find((m) => m.round === "QF" && m.slot === 0)!;
+    const qf0 = built.find((m) => m.round === "R8" && m.slot === 0)!;
 
     // Finalize an R16 match 2-1 (home wins), weight 1.
     await db
@@ -105,6 +120,8 @@ describe("DB integration: schema + leaderboard pipeline", () => {
       { userId: "u_bob", matchId: r16s0.id, h: 3, a: 1 },
       // Carol: R16 wrong winner far → 0
       { userId: "u_carol", matchId: r16s0.id, h: 0, a: 3 },
+      // Ghost (non-member): a perfect pick that must be ignored by the board.
+      { userId: "u_ghost", matchId: r16s0.id, h: 2, a: 1 },
     ];
     for (const p of preds) {
       await db.insert(schema.predictions).values({
@@ -118,7 +135,9 @@ describe("DB integration: schema + leaderboard pipeline", () => {
 
     const lb = await collectLeaderboard(db, T);
 
+    // Only members appear — ghost is excluded despite a perfect prediction.
     expect(lb.map((e) => e.username)).toEqual(["alice", "bob", "carol"]);
+    expect(lb.some((e) => e.username === "ghost")).toBe(false);
     expect(lb[0].points).toBe(30);
     expect(lb[0].exactCount).toBe(2);
     expect(lb[0].rank).toBe(1);

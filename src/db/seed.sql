@@ -9,8 +9,9 @@ DELETE FROM "match"      WHERE "tournamentId" = 't_demo';
 DELETE FROM "team"       WHERE "tournamentId" = 't_demo';
 DELETE FROM "tournament" WHERE "id" = 't_demo';
 
-INSERT INTO "tournament" ("id","name","status","currentRound","picksDeadline","championTeamId","createdAt")
-VALUES ('t_demo','Kart Hero World Cup','active','R16', 1893456000000, NULL, 1751414400000);
+INSERT INTO "tournament"
+ ("id","name","status","bracketSize","currentRound","picksDeadline","championTeamId","visible","featured","joinPolicy","joinCode","isGeneralPool","createdAt")
+VALUES ('t_demo','Kart Hero General Pool','active',16,'R16', 1893456000000, NULL, 1, 1, 'open', NULL, 1, 1751414400000);
 
 -- 16 teams (seeds 1..16)
 INSERT INTO "team" ("id","tournamentId","name","seed","colorHint","eliminated") VALUES
@@ -44,12 +45,12 @@ VALUES
  ('m_r16_6','t_demo','R16',6,'tm_7','tm_10',NULL,NULL,0,NULL,'scheduled',NULL,'m_qf_3','home'),
  ('m_r16_7','t_demo','R16',7,'tm_2','tm_15',NULL,NULL,0,NULL,'scheduled',NULL,'m_qf_3','away'),
  -- Quarter-finals (slots 0..3)
- ('m_qf_0','t_demo','QF',0,NULL,NULL,NULL,NULL,0,NULL,'scheduled',NULL,'m_sf_0','home'),
- ('m_qf_1','t_demo','QF',1,NULL,NULL,NULL,NULL,0,NULL,'scheduled',NULL,'m_sf_0','away'),
- ('m_qf_2','t_demo','QF',2,NULL,NULL,NULL,NULL,0,NULL,'scheduled',NULL,'m_sf_1','home'),
- ('m_qf_3','t_demo','QF',3,NULL,NULL,NULL,NULL,0,NULL,'scheduled',NULL,'m_sf_1','away'),
+ ('m_qf_0','t_demo','R8',0,NULL,NULL,NULL,NULL,0,NULL,'scheduled',NULL,'m_sf_0','home'),
+ ('m_qf_1','t_demo','R8',1,NULL,NULL,NULL,NULL,0,NULL,'scheduled',NULL,'m_sf_0','away'),
+ ('m_qf_2','t_demo','R8',2,NULL,NULL,NULL,NULL,0,NULL,'scheduled',NULL,'m_sf_1','home'),
+ ('m_qf_3','t_demo','R8',3,NULL,NULL,NULL,NULL,0,NULL,'scheduled',NULL,'m_sf_1','away'),
  -- Semi-finals (slots 0..1)
- ('m_sf_0','t_demo','SF',0,NULL,NULL,NULL,NULL,0,NULL,'scheduled',NULL,'m_final','home'),
- ('m_sf_1','t_demo','SF',1,NULL,NULL,NULL,NULL,0,NULL,'scheduled',NULL,'m_final','away'),
+ ('m_sf_0','t_demo','R4',0,NULL,NULL,NULL,NULL,0,NULL,'scheduled',NULL,'m_final','home'),
+ ('m_sf_1','t_demo','R4',1,NULL,NULL,NULL,NULL,0,NULL,'scheduled',NULL,'m_final','away'),
  -- Final (slot 0)
- ('m_final','t_demo','FINAL',0,NULL,NULL,NULL,NULL,0,NULL,'scheduled',NULL,NULL,NULL);
+ ('m_final','t_demo','R2',0,NULL,NULL,NULL,NULL,0,NULL,'scheduled',NULL,NULL,NULL);

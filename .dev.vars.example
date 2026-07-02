@@ -23,3 +23,8 @@ ADMIN_EMAILS="you@example.com"
 # FACEBOOK_CLIENT_SECRET=""
 # TWITTER_CLIENT_ID=""
 # TWITTER_CLIENT_SECRET=""
+
+# --- Optional: announcement emails via Resend (https://resend.com) ---
+# If unset, admin announcements still post to the page but no email is sent.
+# RESEND_API_KEY=""
+# EMAIL_FROM="Kart Hero Cup <noreply@yourdomain.com>"

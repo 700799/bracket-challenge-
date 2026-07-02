@@ -9,12 +9,14 @@ import { submitPrediction } from "@/app/actions/predictions";
 import { resolveWinner, resolvePredictedWinner } from "@/lib/scoring";
 import type { MatchVM, TeamVM } from "./types";
 
-const ROUND_ACCENT: Record<string, string> = {
-  R16: "border-cobalt",
-  QF: "border-kart",
-  SF: "border-power",
-  FINAL: "border-star",
-};
+/** Accent border by how deep the round is (final = gold). */
+function roundAccent(code: string): string {
+  const teams = parseInt(code.slice(1), 10);
+  if (teams === 2) return "border-star";
+  if (teams === 4) return "border-power";
+  if (teams === 8) return "border-kart";
+  return "border-cobalt";
+}
 
 function TeamRow({
   team,
@@ -127,7 +129,7 @@ export function MatchCard({
   }
 
   return (
-    <div className={`sticker bg-[#141a4d] p-2.5 ${ROUND_ACCENT[match.round] ?? ""}`}>
+    <div className={`sticker bg-[#141a4d] p-2.5 ${roundAccent(match.round)}`}>
       {/* teams + score */}
       <div className="space-y-1">
         <TeamRow

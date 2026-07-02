@@ -1,45 +1,68 @@
 import { describe, it, expect } from "vitest";
-import { buildBracket, feedTarget, matchWinner, nextRound } from "./bracket";
+import {
+  buildBracket,
+  feedTarget,
+  matchWinner,
+  nextRound,
+  roundsForSize,
+  seedOrder,
+  roundMatchCount,
+  isSupportedSize,
+} from "./bracket";
 import { parseYouTubeId, youTubeEmbedUrl, punishmentSlotLabel, ordinal } from "./youtube";
 
 describe("bracket structure", () => {
-  it("nextRound walks R16→QF→SF→FINAL→null", () => {
-    expect(nextRound("R16")).toBe("QF");
-    expect(nextRound("QF")).toBe("SF");
-    expect(nextRound("SF")).toBe("FINAL");
-    expect(nextRound("FINAL")).toBeNull();
+  it("rounds are generic R{n} codes largest→smallest", () => {
+    expect(roundsForSize(16)).toEqual(["R16", "R8", "R4", "R2"]);
+    expect(roundsForSize(8)).toEqual(["R8", "R4", "R2"]);
+    expect(roundsForSize(32)).toEqual(["R32", "R16", "R8", "R4", "R2"]);
+  });
+
+  it("nextRound walks R16→R8→R4→R2→null", () => {
+    expect(nextRound("R16")).toBe("R8");
+    expect(nextRound("R8")).toBe("R4");
+    expect(nextRound("R4")).toBe("R2");
+    expect(nextRound("R2")).toBeNull();
   });
 
   it("feedTarget maps slots to next round home/away", () => {
-    expect(feedTarget("R16", 0)).toEqual({ round: "QF", slot: 0, side: "home" });
-    expect(feedTarget("R16", 1)).toEqual({ round: "QF", slot: 0, side: "away" });
-    expect(feedTarget("R16", 7)).toEqual({ round: "QF", slot: 3, side: "away" });
-    expect(feedTarget("FINAL", 0)).toBeNull();
+    expect(feedTarget("R16", 0)).toEqual({ round: "R8", slot: 0, side: "home" });
+    expect(feedTarget("R16", 1)).toEqual({ round: "R8", slot: 0, side: "away" });
+    expect(feedTarget("R16", 7)).toEqual({ round: "R8", slot: 3, side: "away" });
+    expect(feedTarget("R2", 0)).toBeNull();
   });
 
-  it("buildBracket creates 15 wired matches with seeded R16", () => {
-    const teams = Array.from({ length: 16 }, (_, i) => `t${i + 1}`);
+  it("seedOrder keeps top seeds apart (1 & 2 in opposite halves)", () => {
+    const o16 = seedOrder(16);
+    expect(o16).toHaveLength(16);
+    expect(o16[0]).toBe(1); // slot 0 home = seed 1
+    expect(o16[1]).toBe(16); // slot 0 away = seed 16
+    // seed 2 lives in the second half of the draw
+    expect(o16.indexOf(2)).toBeGreaterThanOrEqual(8);
+    expect(new Set(o16).size).toBe(16); // all seeds present once
+  });
+
+  it.each([8, 16, 32, 64])("buildBracket(%i) wires a complete bracket", (size) => {
+    expect(isSupportedSize(size)).toBe(true);
+    const teams = Array.from({ length: size }, (_, i) => `t${i + 1}`);
     let n = 0;
-    const matches = buildBracket(teams, () => `m${n++}`);
-    expect(matches).toHaveLength(15);
+    const matches = buildBracket(teams, size, () => `m${n++}`);
+    expect(matches).toHaveLength(size - 1);
 
-    const r16 = matches.filter((m) => m.round === "R16");
-    expect(r16).toHaveLength(8);
-    // Slot 0 pairs seed 1 (t1) vs seed 16 (t16) per SEED_ORDER.
-    expect(r16[0].homeTeamId).toBe("t1");
-    expect(r16[0].awayTeamId).toBe("t16");
+    const first = matches.filter((m) => m.round === `R${size}`);
+    expect(first).toHaveLength(size / 2);
+    expect(first[0].homeTeamId).toBe("t1");
+    expect(first[0].awayTeamId).toBe(`t${size}`);
 
-    // Every non-final match feeds somewhere; final feeds nowhere.
-    const final = matches.find((m) => m.round === "FINAL")!;
+    const final = matches.find((m) => m.round === "R2")!;
     expect(final.feedsIntoMatchId).toBeNull();
-    for (const m of matches.filter((x) => x.round !== "FINAL")) {
+    for (const m of matches.filter((x) => x.round !== "R2")) {
       expect(m.feedsIntoMatchId).not.toBeNull();
     }
-
-    // R16 slot 0 and 1 feed the same QF match, opposite sides.
-    expect(r16[0].feedsIntoMatchId).toBe(r16[1].feedsIntoMatchId);
-    expect(r16[0].feedsIntoSide).toBe("home");
-    expect(r16[1].feedsIntoSide).toBe("away");
+    expect(first[0].feedsIntoMatchId).toBe(first[1].feedsIntoMatchId);
+    expect(first[0].feedsIntoSide).toBe("home");
+    expect(first[1].feedsIntoSide).toBe("away");
+    expect(roundMatchCount(`R${size}`)).toBe(size / 2);
   });
 
   it("matchWinner respects scores and penalties", () => {

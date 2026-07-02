@@ -1,29 +1,44 @@
-# 🏁 Kart Hero World Cup — Bracket Challenge
+# 🏁 Kart Hero Cup — Bracket Challenge
 
-A 16-team World-Cup-style knockout **bracket prediction game** with a bold,
-Mario-Kart-inspired "racing hero" look. Players sign in, pick every score from
-the Round of 16 to the Final, and climb a weighted leaderboard. An admin runs
-the tournament, tracks signups, and assigns YouTube **workout "punishment"
-videos** to ranked leaderboard spots (e.g. "4th from last").
+A World-Cup-style knockout **bracket prediction game** with a bold,
+Mario-Kart-inspired "racing hero" look. Run **multiple tournaments** of
+**8/16/32/64 teams**, import teams from a source, let players **join by code or a
+general pool**, and climb a weighted leaderboard. An admin runs everything,
+tracks members, posts announcements, and assigns YouTube **workout "punishment"
+videos** to ranked spots (e.g. "4th from last").
 
 Built on **Next.js (App Router)** and deploys directly to **Cloudflare Workers**
-(via OpenNext) with a **Cloudflare D1** database — no future migration needed.
+(via OpenNext) with a **Cloudflare D1** database.
 
 ---
 
 ## Features
 
-- **16 → 8 → 4 → 2 → Champion** bracket that auto-advances winners each round.
+- **Any-size brackets** — 8/16/32/64 teams. Rounds and scoring weights scale
+  automatically (a 16-team cup keeps R16 ×1 · QF ×2 · SF ×3 · Final ×5).
+- **Multiple tournaments** — admin can create, **show/hide**, and **feature** them;
+  the public home page has a **tournament switcher**.
+- **Import teams** when creating a tournament — **paste a list**, **fetch from a URL**
+  (JSON/CSV, SSRF-guarded), or **clone** an existing tournament.
+- **Join model** — players **join the general pool** (open) or **join a private
+  tournament by code**; the admin **generates/regenerates join codes**. Only members
+  can pick and appear on that tournament's leaderboard.
 - **Google sign-in** (Auth.js). Facebook + X/Twitter are scaffolded for later.
-- **Required username** + choose your hero mascot. Real name/email are **admin-only**.
+- **Required username** + 50 hero avatars. Real name/email are **admin-only**.
 - **Score predictions** with a **"won on penalties"** toggle and shootout-winner pick.
 - **Picks deadline** with a live countdown; picks lock at the deadline (or at kickoff).
 - **Weighted scoring:** correct winner + exact score + closeness (delta) + penalty bonus,
-  all × round weight (R16 ×1, QF ×2, SF ×3, Final ×5). See `/rules`.
-- **Leaderboard** on the home page with medals + assigned punishment videos.
-- **Admin HQ** with a pill-toggle for three sections: Tournament, Signups, Punishments.
+  all × round weight. See `/rules`.
+- **Leaderboard** with medals + assigned punishment videos, plus a **group stats** panel
+  (biggest delta scores, win/loss records, average & median points, your rank in group).
+- **Announcements** — admin posts to a tournament (shown at the bottom of its page) and can
+  **email all members** (via Resend, if configured).
+- **Admin HQ** with a pill-toggle: Tournaments, Results, Signups, Punishments, Announce.
 - **Haptics + sound** on selects/buttons (with a mute toggle).
 - Original artwork — bold sticker-style mascots, some running/playing soccer.
+
+> Today, only the admin (per `ADMIN_EMAILS`) can create tournaments and use the import
+> tools; the architecture leaves room to open creation to any user later.
 
 ## Tech stack
 
@@ -112,6 +127,9 @@ npm run typecheck # tsc --noEmit
    npx wrangler secret put GOOGLE_CLIENT_SECRET
    npx wrangler secret put ADMIN_EMAILS
    npx wrangler secret put AUTH_URL   # your deployed https URL
+   # Optional — enables announcement emails (no-op if unset):
+   npx wrangler secret put RESEND_API_KEY
+   npx wrangler secret put EMAIL_FROM  # e.g. "Kart Hero Cup <noreply@you.com>"
    ```
 
    Add your deployed callback URL to the Google OAuth app:

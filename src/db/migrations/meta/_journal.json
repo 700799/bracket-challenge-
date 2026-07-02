@@ -8,6 +8,13 @@
       "when": 1782960369931,
       "tag": "0000_init",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1783004363265,
+      "tag": "0001_multi_tournament",
+      "breakpoints": true
     }
   ]
 }

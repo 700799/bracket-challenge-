@@ -15,6 +15,9 @@ declare global {
     FACEBOOK_CLIENT_SECRET?: string;
     TWITTER_CLIENT_ID?: string;
     TWITTER_CLIENT_SECRET?: string;
+    // Optional: enables announcement emails (Resend). No-op if unset.
+    RESEND_API_KEY?: string;
+    EMAIL_FROM?: string;
   }
 }
 

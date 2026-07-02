@@ -1,4 +1,5 @@
-import { ROUND_WEIGHT, POINTS } from "@/lib/scoring";
+import { roundWeight, roundLabel, POINTS } from "@/lib/scoring";
+import { roundsForSize } from "@/lib/bracket";
 import { Coin, Star, PenaltyIcon, CheckBadge } from "@/components/art/icons";
 import { KartLink } from "@/components/ui/buttons";
 
@@ -37,12 +38,13 @@ export default function RulesPage() {
         <p className="mb-3 text-sm text-cream/70">
           Every point you earn is multiplied by the round weight — later rounds
           are worth much more, so the final can swing the whole leaderboard.
+          Weights scale to the bracket size; a classic 16-team cup looks like this:
         </p>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          {(["R16", "QF", "SF", "FINAL"] as const).map((r) => (
+          {roundsForSize(16).map((r) => (
             <div key={r} className="sticker bg-cobalt p-3 text-center">
-              <div className="titlecard text-lg text-cream">{r}</div>
-              <div className="titlecard text-2xl text-star">×{ROUND_WEIGHT[r]}</div>
+              <div className="titlecard text-lg text-cream">{roundLabel(r)}</div>
+              <div className="titlecard text-2xl text-star">×{roundWeight(r, 16)}</div>
             </div>
           ))}
         </div>
