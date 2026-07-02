@@ -1,6 +1,6 @@
 "use client";
 
-import { HeroMascot, type MascotVariant } from "@/components/art/mascots";
+import { HeroAvatar } from "@/components/art/avatars";
 import type { AdminSignup } from "./types";
 
 export function SignupsPanel({ signups }: { signups: AdminSignup[] }) {
@@ -27,7 +27,7 @@ export function SignupsPanel({ signups }: { signups: AdminSignup[] }) {
           {signups.map((s) => (
             <tr key={s.userId} className="border-t-2 border-ink/40 text-cream">
               <td className="px-2 py-1.5">
-                <HeroMascot variant={s.mascotVariant as MascotVariant} className="h-8 w-8" />
+                <HeroAvatar avatarId={s.mascotVariant} className="h-9 w-9" />
               </td>
               <td className="px-2 py-1.5 font-display">{s.username}</td>
               <td className="px-2 py-1.5 text-cream/80">{s.name ?? "—"}</td>

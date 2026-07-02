@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { signIn, auth } from "@/auth";
-import { HeroMascot } from "@/components/art/mascots";
+import { HeroAvatar } from "@/components/art/avatars";
 import { Star } from "@/components/art/icons";
 
 export const dynamic = "force-dynamic";
@@ -18,10 +18,11 @@ export default async function LoginPage({
     <div className="mx-auto max-w-md">
       <div className="sticker bg-gradient-to-b from-cobalt to-[#141a4d] p-8 text-center">
         <div className="mb-3 flex justify-center gap-2">
-          <HeroMascot variant="red" className="h-16 w-16" />
-          <HeroMascot variant="blue" className="h-16 w-16" />
-          <HeroMascot variant="green" className="h-16 w-16" />
+          <HeroAvatar avatarId="fire-fury" className="h-16 w-16" />
+          <HeroAvatar avatarId="bolt-brawler" className="h-16 w-16" />
+          <HeroAvatar avatarId="golden-boot" className="h-16 w-16" />
         </div>
+        <p className="text-xs text-cream/60">Pick from 50 hero avatars after you join.</p>
         <h1 className="titlecard text-3xl text-star">Join the Cup</h1>
         <p className="mt-2 text-sm text-cream/80">
           Sign in to make your bracket picks and climb the leaderboard.

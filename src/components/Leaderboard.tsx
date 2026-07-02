@@ -1,5 +1,5 @@
 import { Medal, Coin, Star } from "@/components/art/icons";
-import { HeroMascot, type MascotVariant } from "@/components/art/mascots";
+import { HeroAvatar } from "@/components/art/avatars";
 import { PunishmentVideo } from "@/components/PunishmentVideo";
 import { punishmentsForUser, type ResolvedPunishment } from "@/lib/punishments";
 import type { LeaderboardEntry } from "@/lib/scoring";
@@ -45,9 +45,9 @@ export function Leaderboard({
                 )}
               </div>
 
-              <HeroMascot
-                variant={e.mascotVariant as MascotVariant}
-                className="h-10 w-10 shrink-0"
+              <HeroAvatar
+                avatarId={e.mascotVariant}
+                className="h-11 w-11 shrink-0"
               />
 
               <div className="min-w-0 flex-1">

@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { getCurrentPlayer } from "@/lib/session";
 import { ProfileForm } from "@/components/ProfileForm";
 import { KartLink } from "@/components/ui/buttons";
-import type { MascotVariant } from "@/components/art/mascots";
+import { DEFAULT_AVATAR } from "@/components/art/avatars";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +19,7 @@ export default async function MePage() {
       <div className="sticker bg-[#141a4d] p-5">
         <ProfileForm
           initialUsername={profile?.username ?? ""}
-          initialMascot={(profile?.mascotVariant as MascotVariant) ?? "red"}
+          initialAvatar={profile?.mascotVariant ?? DEFAULT_AVATAR}
         />
       </div>
 

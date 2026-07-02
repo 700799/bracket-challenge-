@@ -6,7 +6,7 @@ import { profiles } from "@/db/schema";
 import { getSessionUser } from "@/lib/session";
 import { usernameTaken } from "@/lib/queries";
 import { usernameSchema } from "@/lib/validation";
-import { MASCOT_VARIANTS } from "@/components/art/mascots";
+import { AVATAR_BY_ID, DEFAULT_AVATAR } from "@/components/art/avatar-data";
 import { revalidatePath } from "next/cache";
 
 export type ProfileResult = { ok: true } | { ok: false; error: string };
@@ -25,11 +25,10 @@ export async function saveProfile(input: {
   }
   const username = parsedName.data;
 
-  const mascot = MASCOT_VARIANTS.includes(
-    input.mascotVariant as (typeof MASCOT_VARIANTS)[number],
-  )
+  // `mascotVariant` now stores the chosen avatar id.
+  const mascot = AVATAR_BY_ID.has(input.mascotVariant)
     ? input.mascotVariant
-    : "red";
+    : DEFAULT_AVATAR;
 
   if (await usernameTaken(username, user.id)) {
     return { ok: false, error: "That username is taken — try another." };

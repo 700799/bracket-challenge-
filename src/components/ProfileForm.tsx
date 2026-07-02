@@ -3,29 +3,32 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { useFeedback } from "@/lib/feedback";
-import { HeroMascot, MASCOT_VARIANTS, type MascotVariant } from "@/components/art/mascots";
+import { HeroAvatar, AVATARS, DEFAULT_AVATAR } from "@/components/art/avatars";
 import { saveProfile } from "@/app/actions/profile";
 
 export function ProfileForm({
   initialUsername,
-  initialMascot,
+  initialAvatar,
 }: {
   initialUsername: string;
-  initialMascot: MascotVariant;
+  initialAvatar: string;
 }) {
   const router = useRouter();
   const fb = useFeedback();
   const [username, setUsername] = React.useState(initialUsername);
-  const [mascot, setMascot] = React.useState<MascotVariant>(initialMascot);
+  const [avatar, setAvatar] = React.useState(initialAvatar || DEFAULT_AVATAR);
   const [pending, start] = React.useTransition();
   const [msg, setMsg] = React.useState<string | null>(null);
   const [ok, setOk] = React.useState(false);
+
+  const groups = ["Sport", "Elemental"] as const;
+  const selected = AVATARS.find((a) => a.id === avatar);
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
     setMsg(null);
     start(async () => {
-      const res = await saveProfile({ username, mascotVariant: mascot });
+      const res = await saveProfile({ username, mascotVariant: avatar });
       if (res.ok) {
         fb.coin();
         setOk(true);
@@ -59,27 +62,42 @@ export function ProfileForm({
       </div>
 
       <div>
-        <label className="mb-2 block font-display text-sm text-cream">
-          Choose your hero
-        </label>
-        <div className="flex flex-wrap gap-2">
-          {MASCOT_VARIANTS.map((v) => (
-            <button
-              key={v}
-              type="button"
-              data-active={mascot === v}
-              onClick={() => {
-                fb.select();
-                setMascot(v);
-              }}
-              className={`sticker bg-[#141a4d] p-1 transition-transform ${
-                mascot === v ? "ring-4 ring-star" : ""
-              }`}
-              aria-label={`Hero ${v}`}
-              aria-pressed={mascot === v}
-            >
-              <HeroMascot variant={v} className="h-16 w-16" />
-            </button>
+        <div className="mb-2 flex items-center gap-3">
+          <label className="font-display text-sm text-cream">
+            Choose your hero <span className="text-cream/50">(50 to pick from)</span>
+          </label>
+          {selected ? (
+            <span className="chip bg-star text-ink">{selected.name}</span>
+          ) : null}
+        </div>
+
+        <div className="max-h-96 space-y-4 overflow-y-auto rounded-xl border-4 border-ink bg-[#0e1547]/60 p-3">
+          {groups.map((g) => (
+            <div key={g}>
+              <h4 className="titlecard mb-2 text-sm text-cream/80">
+                {g === "Sport" ? "⚽ Sport Heroes" : "🔥 Elemental Characters"}
+              </h4>
+              <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
+                {AVATARS.filter((a) => a.group === g).map((a) => (
+                  <button
+                    key={a.id}
+                    type="button"
+                    aria-pressed={avatar === a.id}
+                    aria-label={a.name}
+                    title={a.name}
+                    onClick={() => {
+                      fb.select();
+                      setAvatar(a.id);
+                    }}
+                    className={`sticker bg-[#141a4d] p-1 transition-transform hover:-translate-y-0.5 ${
+                      avatar === a.id ? "ring-4 ring-star" : ""
+                    }`}
+                  >
+                    <HeroAvatar avatarId={a.id} className="h-full w-full" />
+                  </button>
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       </div>
