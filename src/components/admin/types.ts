@@ -26,8 +26,29 @@ export interface AdminTournament {
   name: string;
   status: TournamentStatus;
   currentRound: Round;
+  bracketSize: number;
   picksDeadlineMs: number | null;
   championName: string | null;
+}
+
+export interface AdminTournamentListItem {
+  id: string;
+  name: string;
+  bracketSize: number;
+  status: TournamentStatus;
+  visible: boolean;
+  featured: boolean;
+  isGeneralPool: boolean;
+  joinPolicy: "open" | "code";
+  joinCode: string | null;
+  memberCount: number;
+}
+
+export interface AdminAnnouncement {
+  id: string;
+  body: string;
+  emailedCount: number;
+  createdAtMs: number;
 }
 
 export interface AdminSignup {

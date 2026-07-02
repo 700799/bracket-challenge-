@@ -1,7 +1,7 @@
 import type { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core";
 import { and, eq, inArray } from "drizzle-orm";
 import * as schema from "@/db/schema";
-import { matches, predictions, profiles } from "@/db/schema";
+import { matches, predictions, profiles, memberships, tournaments } from "@/db/schema";
 import {
   buildLeaderboard,
   type LeaderboardEntry,
@@ -14,27 +14,54 @@ import {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type AnyDb = BaseSQLiteDatabase<any, any, typeof schema>;
 
-/**
- * Collect every scored prediction over finalized matches and build the ranked
- * leaderboard. Driver-agnostic so it can be unit-tested against a real SQLite db.
- */
+export interface TournamentScoring {
+  entries: LeaderboardEntry[];
+  scored: ScoredPrediction[];
+  bracketSize: number;
+}
+
+/** Leaderboard entries only (thin wrapper over {@link collectScoring}). */
 export async function collectLeaderboard(
   db: AnyDb,
   tournamentId: string,
 ): Promise<LeaderboardEntry[]> {
+  return (await collectScoring(db, tournamentId)).entries;
+}
+
+/**
+ * Collect every scored prediction over finalized matches and build the ranked
+ * leaderboard, returning both the entries and the raw scored predictions (for
+ * stats). Driver-agnostic so it can be unit-tested against a real SQLite db.
+ * Members-only.
+ */
+export async function collectScoring(
+  db: AnyDb,
+  tournamentId: string,
+): Promise<TournamentScoring> {
+  const tourRows = await db
+    .select({ bracketSize: tournaments.bracketSize })
+    .from(tournaments)
+    .where(eq(tournaments.id, tournamentId))
+    .limit(1);
+  const bracketSize = tourRows[0]?.bracketSize ?? 16;
+
+  // Only members of this tournament appear on its leaderboard. Join time is the
+  // membership time (tiebreak), falling back to profile creation.
   const playerRows = await db
     .select({
       userId: profiles.userId,
       username: profiles.username,
       mascotVariant: profiles.mascotVariant,
-      createdAt: profiles.createdAt,
+      joinedAt: memberships.joinedAt,
     })
-    .from(profiles);
+    .from(memberships)
+    .innerJoin(profiles, eq(profiles.userId, memberships.userId))
+    .where(eq(memberships.tournamentId, tournamentId));
   const players: PlayerMeta[] = playerRows.map((p) => ({
     userId: p.userId,
     username: p.username,
     mascotVariant: p.mascotVariant,
-    joinedAt: p.createdAt.getTime(),
+    joinedAt: p.joinedAt.getTime(),
   }));
 
   const finalMatches = await db
@@ -81,5 +108,9 @@ export async function collectLeaderboard(
     }
   }
 
-  return buildLeaderboard(players, scored);
+  return {
+    entries: buildLeaderboard(players, scored, bracketSize),
+    scored,
+    bracketSize,
+  };
 }

@@ -1,8 +1,8 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { getDb } from "@/db";
-import { matches, predictions, profiles, tournaments } from "@/db/schema";
+import { matches, predictions, profiles, tournaments, memberships } from "@/db/schema";
 import { getSessionUser } from "@/lib/session";
 import { isMatchLocked } from "@/lib/queries";
 import { predictionSchema } from "@/lib/validation";
@@ -49,6 +49,21 @@ export async function submitPrediction(
     .limit(1);
   const tournament = tourRows[0];
   if (!tournament) return { ok: false, error: "Tournament not found." };
+
+  // Must be a member of this tournament to make picks in it.
+  const member = await db
+    .select({ id: memberships.id })
+    .from(memberships)
+    .where(
+      and(
+        eq(memberships.userId, user.id),
+        eq(memberships.tournamentId, tournament.id),
+      ),
+    )
+    .limit(1);
+  if (!member[0]) {
+    return { ok: false, error: "Join this tournament to make picks." };
+  }
 
   if (isMatchLocked(tournament, match)) {
     return { ok: false, error: "Picks are locked for this match." };

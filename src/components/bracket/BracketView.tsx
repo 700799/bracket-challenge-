@@ -1,41 +1,37 @@
 import { MatchCard } from "./MatchCard";
 import { Trophy } from "@/components/art/icons";
 import { HeroMascot, type MascotVariant } from "@/components/art/mascots";
-import { ROUND_LABEL } from "@/lib/scoring";
-import { ROUNDS } from "@/lib/bracket";
+import { roundLabel } from "@/lib/scoring";
+import { roundsForSize, FINAL_ROUND } from "@/lib/bracket";
 import type { Round } from "@/db/schema";
 import type { MatchVM } from "./types";
-
-const COL_TITLE: Record<Round, string> = {
-  R16: ROUND_LABEL.R16,
-  QF: ROUND_LABEL.QF,
-  SF: ROUND_LABEL.SF,
-  FINAL: ROUND_LABEL.FINAL,
-};
 
 export function BracketView({
   matches,
   loggedIn,
   championName,
+  bracketSize,
 }: {
   matches: MatchVM[];
   loggedIn: boolean;
   championName: string | null;
+  bracketSize: number;
 }) {
   const byRound = (r: Round) =>
     matches.filter((m) => m.round === r).sort((a, b) => a.slot - b.slot);
+  const rounds = roundsForSize(bracketSize);
 
   return (
     <div className="checker-bg sticker overflow-x-auto bg-[#0e1547]/70 p-4">
       <div className="flex min-w-max items-stretch gap-4">
-        {ROUNDS.map((round) => (
+        {rounds.map((round) => (
           <div key={round} className="flex w-60 flex-col">
             <h3 className="titlecard mb-2 text-center text-lg text-cream">
-              {COL_TITLE[round]}
+              {roundLabel(round)}
             </h3>
             <div
               className={`flex flex-1 flex-col justify-around gap-3 ${
-                round === "FINAL" ? "justify-center" : ""
+                round === FINAL_ROUND ? "justify-center" : ""
               }`}
             >
               {byRound(round).map((m) => (

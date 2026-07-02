@@ -78,18 +78,66 @@ export const profiles = sqliteTable("profile", {
 });
 
 export type TournamentStatus = "setup" | "active" | "complete";
-export type Round = "R16" | "QF" | "SF" | "FINAL";
+/** Round code `R{teamsInRound}`, e.g. "R16" (round of 16), "R2" (final). */
+export type Round = string;
 export type MatchStatus = "scheduled" | "locked" | "final";
 export type BracketSide = "home" | "away";
+export type JoinPolicy = "open" | "code";
 
 export const tournaments = sqliteTable("tournament", {
   id: text("id").primaryKey().$defaultFn(uuid),
   name: text("name").notNull(),
   status: text("status").$type<TournamentStatus>().notNull().default("setup"),
+  /** Number of teams (power of two: 8/16/32/64). */
+  bracketSize: integer("bracketSize").notNull().default(16),
   currentRound: text("currentRound").$type<Round>().notNull().default("R16"),
   /** Global deadline; after this, picks lock everywhere. Nullable = not set. */
   picksDeadline: integer("picksDeadline", { mode: "timestamp_ms" }),
   championTeamId: text("championTeamId"),
+  /** Shown in the public tournament switcher when true. */
+  visible: integer("visible", { mode: "boolean" }).notNull().default(true),
+  /** The default tournament the public home page opens to. */
+  featured: integer("featured", { mode: "boolean" }).notNull().default(false),
+  /** How players join: openly, or only with a code. */
+  joinPolicy: text("joinPolicy").$type<JoinPolicy>().notNull().default("open"),
+  /** Invite code for `code`-policy tournaments (unique when set). */
+  joinCode: text("joinCode").unique(),
+  /** The open, everyone-welcome pool. */
+  isGeneralPool: integer("isGeneralPool", { mode: "boolean" })
+    .notNull()
+    .default(false),
+  createdAt: integer("createdAt", { mode: "timestamp_ms" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+});
+
+/** A player's membership in a tournament (joined openly or via code). */
+export const memberships = sqliteTable(
+  "membership",
+  {
+    id: text("id").primaryKey().$defaultFn(uuid),
+    userId: text("userId")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    tournamentId: text("tournamentId")
+      .notNull()
+      .references(() => tournaments.id, { onDelete: "cascade" }),
+    joinedAt: integer("joinedAt", { mode: "timestamp_ms" })
+      .notNull()
+      .$defaultFn(() => new Date()),
+  },
+  (m) => [unique().on(m.userId, m.tournamentId)],
+);
+
+/** Admin announcement posted to a tournament (and optionally emailed). */
+export const announcements = sqliteTable("announcement", {
+  id: text("id").primaryKey().$defaultFn(uuid),
+  tournamentId: text("tournamentId")
+    .notNull()
+    .references(() => tournaments.id, { onDelete: "cascade" }),
+  body: text("body").notNull(),
+  /** How many members were emailed (0 if email was skipped/unavailable). */
+  emailedCount: integer("emailedCount").notNull().default(0),
   createdAt: integer("createdAt", { mode: "timestamp_ms" })
     .notNull()
     .$defaultFn(() => new Date()),
@@ -178,3 +226,5 @@ export type Team = typeof teams.$inferSelect;
 export type Match = typeof matches.$inferSelect;
 export type Prediction = typeof predictions.$inferSelect;
 export type Punishment = typeof punishments.$inferSelect;
+export type Membership = typeof memberships.$inferSelect;
+export type Announcement = typeof announcements.$inferSelect;

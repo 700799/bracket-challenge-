@@ -1,12 +1,5 @@
 import type { Round } from "@/db/schema";
-
-/** Weight applied to every point earned, growing as the tournament progresses. */
-export const ROUND_WEIGHT: Record<Round, number> = {
-  R16: 1,
-  QF: 2,
-  SF: 3,
-  FINAL: 5,
-};
+import { roundsForSize, roundTeams } from "@/lib/bracket";
 
 export const POINTS = {
   /** Correct winner (including via penalty shootout). */
@@ -19,12 +12,28 @@ export const POINTS = {
   PENALTY: 2,
 } as const;
 
-export const ROUND_LABEL: Record<Round, string> = {
-  R16: "Round of 16",
-  QF: "Quarter-finals",
-  SF: "Semi-finals",
-  FINAL: "Final",
-};
+/**
+ * Points multiplier for a round, growing as the tournament progresses.
+ * Non-final round at index k (0-based) → k+1; the final → numRounds+1.
+ * This preserves the classic 16-team weights (R16=1, QF=2, SF=3, Final=5) and
+ * scales for any size (8-team → 1,2,4; 32-team → 1,2,3,4,6).
+ */
+export function roundWeight(code: Round, bracketSize: number): number {
+  const rounds = roundsForSize(bracketSize);
+  const idx = rounds.indexOf(code);
+  if (idx < 0) return 1;
+  const isFinal = idx === rounds.length - 1;
+  return isFinal ? rounds.length + 1 : idx + 1;
+}
+
+/** Full-name label for a round code, e.g. R2→Final, R8→Quarter-finals. */
+export function roundLabel(code: Round): string {
+  const t = roundTeams(code);
+  if (t === 2) return "Final";
+  if (t === 4) return "Semi-finals";
+  if (t === 8) return "Quarter-finals";
+  return `Round of ${t}`;
+}
 
 export interface MatchResult {
   round: Round;
@@ -80,8 +89,9 @@ export function resolvePredictedWinner(
 export function scorePrediction(
   prediction: PredictionInput,
   result: MatchResult,
+  bracketSize: number,
 ): ScoreBreakdown {
-  const weight = ROUND_WEIGHT[result.round];
+  const weight = roundWeight(result.round, bracketSize);
 
   const actualWinner = resolveWinner(result);
   const predictedWinner = resolvePredictedWinner(
@@ -158,6 +168,7 @@ export interface PlayerMeta {
 export function buildLeaderboard(
   players: PlayerMeta[],
   scored: ScoredPrediction[],
+  bracketSize: number,
 ): LeaderboardEntry[] {
   const byUser = new Map<string, LeaderboardEntry>();
   for (const p of players) {
@@ -176,7 +187,7 @@ export function buildLeaderboard(
   for (const s of scored) {
     const entry = byUser.get(s.userId);
     if (!entry) continue;
-    const b = scorePrediction(s.prediction, s.result);
+    const b = scorePrediction(s.prediction, s.result, bracketSize);
     entry.points += b.total;
     if (b.isExact) entry.exactCount += 1;
     if (b.correctWinner) entry.correctWinners += 1;
