@@ -1,0 +1,153 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------- */
+/*  Kart Hero design tokens                                          */
+/* ---------------------------------------------------------------- */
+@theme {
+  --color-cobalt: #1b4de4;
+  --color-cobalt-deep: #123bb0;
+  --color-racing: #e5322d;
+  --color-racing-deep: #b31f1b;
+  --color-kart: #33c14e;
+  --color-kart-deep: #1f9a38;
+  --color-star: #f5c518;
+  --color-star-deep: #d19e00;
+  --color-power: #7a3cf0;
+  --color-power-deep: #5a24c2;
+  --color-ink: #0a0a12;
+  --color-cream: #fdf7e3;
+  --color-sky: #2f6bff;
+
+  --font-display: var(--font-luckiest), system-ui, sans-serif;
+  --font-body: var(--font-baloo), system-ui, sans-serif;
+
+  --shadow-sticker: 0 0 0 4px #0a0a12, 0 8px 0 0 rgba(10, 10, 18, 0.35);
+  --shadow-sticker-lg: 0 0 0 5px #0a0a12, 0 12px 0 0 rgba(10, 10, 18, 0.35);
+}
+
+/* ---------------------------------------------------------------- */
+/*  Base                                                            */
+/* ---------------------------------------------------------------- */
+:root {
+  color-scheme: dark;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--color-cream);
+  background-color: #0c1445;
+  background-image:
+    radial-gradient(circle at 15% 10%, rgba(47, 107, 255, 0.35), transparent 45%),
+    radial-gradient(circle at 85% 20%, rgba(122, 60, 240, 0.28), transparent 40%),
+    linear-gradient(160deg, #0c1445 0%, #0a0a2e 55%, #08061c 100%);
+  background-attachment: fixed;
+  min-height: 100dvh;
+}
+
+/* Subtle checkered-flag texture used behind sections. */
+.checker-bg {
+  background-image:
+    linear-gradient(45deg, rgba(255, 255, 255, 0.04) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(255, 255, 255, 0.04) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, rgba(255, 255, 255, 0.04) 75%),
+    linear-gradient(-45deg, transparent 75%, rgba(255, 255, 255, 0.04) 75%);
+  background-size: 28px 28px;
+  background-position: 0 0, 0 14px, 14px -14px, -14px 0;
+}
+
+/* ---------------------------------------------------------------- */
+/*  Kart Hero component classes                                     */
+/* ---------------------------------------------------------------- */
+@layer components {
+  /* Thick-outlined sticker surface. */
+  .sticker {
+    @apply relative rounded-2xl border-4 border-ink;
+    box-shadow: 0 6px 0 0 rgba(10, 10, 18, 0.45);
+  }
+
+  /* Chunky pressable button with a hard drop shadow that collapses on press. */
+  .kart-btn {
+    @apply relative inline-flex items-center justify-center gap-2 rounded-full
+      border-4 border-ink px-5 py-2.5 font-display uppercase tracking-wide
+      text-ink transition-all duration-75 select-none cursor-pointer;
+    box-shadow: 0 5px 0 0 var(--color-ink);
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+  }
+  .kart-btn:active {
+    transform: translateY(4px);
+    box-shadow: 0 1px 0 0 var(--color-ink);
+  }
+  .kart-btn:disabled {
+    @apply opacity-60 cursor-not-allowed;
+    transform: none;
+    box-shadow: 0 5px 0 0 var(--color-ink);
+  }
+
+  /* Pill toggle used for the admin section switcher + filters. */
+  .pill {
+    @apply relative inline-flex items-center gap-2 rounded-full border-4 border-ink
+      px-4 py-2 font-display text-sm uppercase tracking-wide text-ink
+      transition-all duration-75 select-none cursor-pointer;
+    background: var(--color-cream);
+    box-shadow: 0 4px 0 0 var(--color-ink);
+  }
+  .pill[data-active="true"] {
+    background: var(--color-star);
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 0 var(--color-ink);
+  }
+  .pill:active {
+    transform: translateY(4px);
+    box-shadow: 0 0 0 0 var(--color-ink);
+  }
+
+  /* Heavy outlined display heading. */
+  .titlecard {
+    font-family: var(--font-display);
+    -webkit-text-stroke: 3px var(--color-ink);
+    paint-order: stroke fill;
+    letter-spacing: 0.02em;
+    line-height: 0.95;
+    text-shadow: 0 6px 0 rgba(10, 10, 18, 0.35);
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-full border-2 border-ink px-2.5 py-0.5
+      font-display text-xs uppercase text-ink;
+  }
+}
+
+/* ---------------------------------------------------------------- */
+/*  Animations                                                      */
+/* ---------------------------------------------------------------- */
+@keyframes hero-run {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-10px) rotate(2deg); }
+}
+@keyframes ball-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes pop-in {
+  0% { transform: scale(0.6); opacity: 0; }
+  70% { transform: scale(1.08); }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes trophy-shine {
+  0%, 100% { filter: drop-shadow(0 0 0 rgba(245, 197, 24, 0)); }
+  50% { filter: drop-shadow(0 0 14px rgba(245, 197, 24, 0.8)); }
+}
+
+.animate-hero-run { animation: hero-run 2.4s ease-in-out infinite; }
+.animate-ball-spin { animation: ball-spin 3s linear infinite; }
+.animate-pop-in { animation: pop-in 0.35s ease-out both; }
+.animate-trophy-shine { animation: trophy-shine 2.5s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-hero-run,
+  .animate-ball-spin,
+  .animate-pop-in,
+  .animate-trophy-shine {
+    animation: none !important;
+  }
+}

@@ -1,0 +1,25 @@
+# Copy this file to `.dev.vars` for local development (never commit `.dev.vars`).
+# In production, set each of these with:  npx wrangler secret put <NAME>
+# (or via the Cloudflare dashboard → Workers → Settings → Variables).
+
+# A random secret used to encrypt Auth.js sessions/JWTs.
+# Generate one with:  npx auth secret   (or)   openssl rand -base64 32
+AUTH_SECRET="dev-only-change-me-please-generate-a-real-secret"
+
+# The public URL of the app. Local dev uses http://localhost:3000.
+AUTH_URL="http://localhost:3000"
+
+# Google OAuth credentials — create at https://console.cloud.google.com/apis/credentials
+# Authorized redirect URI (local): http://localhost:3000/api/auth/callback/google
+GOOGLE_CLIENT_ID=""
+GOOGLE_CLIENT_SECRET=""
+
+# Comma-separated list of Google account emails that are ADMINS.
+# Any logged-in user whose email is in this list can access /admin.
+ADMIN_EMAILS="you@example.com"
+
+# --- Future providers (leave blank for now; wired but disabled until set) ---
+# FACEBOOK_CLIENT_ID=""
+# FACEBOOK_CLIENT_SECRET=""
+# TWITTER_CLIENT_ID=""
+# TWITTER_CLIENT_SECRET=""
