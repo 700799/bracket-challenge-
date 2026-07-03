@@ -18,6 +18,8 @@ declare global {
     // Optional: enables announcement emails (Resend). No-op if unset.
     RESEND_API_KEY?: string;
     EMAIL_FROM?: string;
+    // Optional: api-sports.io (API-Football) key for live team imports.
+    APISPORTS_KEY?: string;
   }
 }
 

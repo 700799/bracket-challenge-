@@ -3,10 +3,16 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { useFeedback } from "@/lib/feedback";
-import { createTournament, importFromUrl } from "@/app/actions/admin";
+import {
+  createTournament,
+  importFromUrl,
+  importFromApiSports,
+  importWorldCupSample,
+} from "@/app/actions/admin";
 import { PillGroup } from "@/components/ui/buttons";
 import { parseTeamList, importedSizeError } from "@/lib/import";
 import { SUPPORTED_SIZES } from "@/lib/bracket";
+import { WORLD_CUP_LEAGUE_ID, DEFAULT_KNOCKOUT_ROUND } from "@/lib/apisports";
 
 const DEFAULT_TEAMS = [
   "Fire Foxes", "Star Sprinters", "Shell Shockers", "Night Owls",
@@ -35,6 +41,8 @@ export function CreateTournament() {
   const [joinPolicy, setJoinPolicy] = React.useState<"open" | "code">("open");
   const [paste, setPaste] = React.useState("");
   const [url, setUrl] = React.useState("");
+  const [league, setLeague] = React.useState(WORLD_CUP_LEAGUE_ID);
+  const [season, setSeason] = React.useState(2022);
   const [pending, start] = React.useTransition();
   const [msg, setMsg] = React.useState<string | null>(null);
 
@@ -67,6 +75,35 @@ export function CreateTournament() {
     setMsg(null);
     start(async () => {
       const res = await importFromUrl(url);
+      if (res.ok) applyNames(res.teams);
+      else {
+        fb.error();
+        setMsg(res.error);
+      }
+    });
+  }
+
+  function fetchFromApiSports() {
+    setMsg(null);
+    start(async () => {
+      const res = await importFromApiSports({
+        leagueId: league,
+        season,
+        round: DEFAULT_KNOCKOUT_ROUND,
+      });
+      if (res.ok) applyNames(res.teams);
+      else {
+        fb.error();
+        setMsg(res.error);
+      }
+    });
+  }
+
+  function loadWorldCupSample() {
+    setMsg(null);
+    setName("FIFA World Cup 2022");
+    start(async () => {
+      const res = await importWorldCupSample();
       if (res.ok) applyNames(res.teams);
       else {
         fb.error();
@@ -174,6 +211,52 @@ export function CreateTournament() {
               JSON array of names/objects or CSV. Must total {SUPPORTED_SIZES.join("/")}.
             </p>
           </div>
+        </div>
+
+        {/* api-sports.io (API-Football) */}
+        <div className="mt-3 border-t-2 border-dashed border-cream/20 pt-3">
+          <div className="mb-1 font-display text-sm text-cream">
+            ⚽ Import from api-sports.io
+          </div>
+          <div className="flex flex-wrap items-end gap-2">
+            <label className="text-xs text-cream">
+              League ID
+              <input
+                type="number"
+                value={league}
+                onChange={(e) => setLeague(Number(e.target.value))}
+                className="mt-1 block w-24 rounded-lg border-2 border-ink bg-cream px-2 py-1 text-ink"
+              />
+            </label>
+            <label className="text-xs text-cream">
+              Season
+              <input
+                type="number"
+                value={season}
+                onChange={(e) => setSeason(Number(e.target.value))}
+                className="mt-1 block w-24 rounded-lg border-2 border-ink bg-cream px-2 py-1 text-ink"
+              />
+            </label>
+            <button
+              type="button"
+              disabled={pending}
+              onClick={fetchFromApiSports}
+              className="kart-btn bg-cobalt text-cream !py-1 text-xs"
+            >
+              {pending ? "Fetching…" : "Fetch Round of 16"}
+            </button>
+            <button
+              type="button"
+              disabled={pending}
+              onClick={loadWorldCupSample}
+              className="kart-btn bg-kart text-ink !py-1 text-xs"
+            >
+              ⚽ Load 2022 World Cup sample
+            </button>
+          </div>
+          <p className="mt-1 text-[11px] text-cream/50">
+            League 1 = World Cup. Live fetch needs an APISPORTS_KEY; the sample works offline.
+          </p>
         </div>
       </div>
 

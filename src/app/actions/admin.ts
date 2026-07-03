@@ -27,7 +27,15 @@ import { isValidYouTubeUrl } from "@/lib/youtube";
 import { generateCode } from "@/lib/code";
 import { sendBulkEmail } from "@/lib/email";
 import { fetchTeamsFromUrl } from "@/lib/import";
+import {
+  fetchApiSportsTeams,
+  worldCupSampleTeams,
+} from "@/lib/apisports";
 import { revalidatePath } from "next/cache";
+
+export type ImportResult =
+  | { ok: true; teams: string[] }
+  | { ok: false; error: string };
 
 export type AdminResult =
   | { ok: true; id?: string; code?: string; emailed?: number }
@@ -134,9 +142,7 @@ export async function createTournament(input: unknown): Promise<AdminResult> {
 }
 
 /** Fetch a team list from an external URL (admin-gated; SSRF-guarded). */
-export async function importFromUrl(
-  url: string,
-): Promise<{ ok: true; teams: string[] } | { ok: false; error: string }> {
+export async function importFromUrl(url: string): Promise<ImportResult> {
   const gate = await requireAdmin();
   if (!gate.ok) return gate;
   try {
@@ -145,6 +151,34 @@ export async function importFromUrl(
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Import failed." };
   }
+}
+
+/** Import teams from api-sports.io (API-Football). Requires APISPORTS_KEY. */
+export async function importFromApiSports(input: {
+  leagueId: number;
+  season: number;
+  round?: string | null;
+}): Promise<ImportResult> {
+  const gate = await requireAdmin();
+  if (!gate.ok) return gate;
+  try {
+    const { env } = getCloudflareContext();
+    const teams = await fetchApiSportsTeams(env, {
+      leagueId: input.leagueId,
+      season: input.season,
+      round: input.round ?? undefined,
+    });
+    return { ok: true, teams: teams.map((t) => t.name) };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Import failed." };
+  }
+}
+
+/** Load the bundled 2022 World Cup Round-of-16 sample (no key needed). */
+export async function importWorldCupSample(): Promise<ImportResult> {
+  const gate = await requireAdmin();
+  if (!gate.ok) return gate;
+  return { ok: true, teams: worldCupSampleTeams().map((t) => t.name) };
 }
 
 /** Clone a tournament's teams + size into a brand new tournament. */

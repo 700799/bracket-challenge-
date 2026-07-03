@@ -19,7 +19,10 @@ Built on **Next.js (App Router)** and deploys directly to **Cloudflare Workers**
 - **Multiple tournaments** — admin can create, **show/hide**, and **feature** them;
   the public home page has a **tournament switcher**.
 - **Import teams** when creating a tournament — **paste a list**, **fetch from a URL**
-  (JSON/CSV, SSRF-guarded), or **clone** an existing tournament.
+  (JSON/CSV, SSRF-guarded), **import from api-sports.io** (API-Football; needs
+  `APISPORTS_KEY`), **clone** an existing tournament, or one-click **Load the 2022
+  World Cup sample** (bundled, works offline). A ready-made **FIFA World Cup 2022**
+  bracket ships in the demo seed.
 - **Join model** — players **join the general pool** (open) or **join a private
   tournament by code**; the admin **generates/regenerates join codes**. Only members
   can pick and appear on that tournament's leaderboard.
@@ -130,6 +133,7 @@ npm run typecheck # tsc --noEmit
    # Optional — enables announcement emails (no-op if unset):
    npx wrangler secret put RESEND_API_KEY
    npx wrangler secret put EMAIL_FROM  # e.g. "Kart Hero Cup <noreply@you.com>"
+   npx wrangler secret put APISPORTS_KEY  # optional: api-sports.io live imports
    ```
 
    Add your deployed callback URL to the Google OAuth app:

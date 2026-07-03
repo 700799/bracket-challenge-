@@ -28,3 +28,8 @@ ADMIN_EMAILS="you@example.com"
 # If unset, admin announcements still post to the page but no email is sent.
 # RESEND_API_KEY=""
 # EMAIL_FROM="Kart Hero Cup <noreply@yourdomain.com>"
+
+# --- Optional: api-sports.io (API-Football) team imports ---
+# Free key at https://dashboard.api-football.com. Without it, the admin can
+# still use the bundled "Load 2022 World Cup sample" import.
+# APISPORTS_KEY=""

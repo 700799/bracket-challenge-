@@ -54,3 +54,54 @@ VALUES
  ('m_sf_1','t_demo','R4',1,NULL,NULL,NULL,NULL,0,NULL,'scheduled',NULL,'m_final','away'),
  -- Final (slot 0)
  ('m_final','t_demo','R2',0,NULL,NULL,NULL,NULL,0,NULL,'scheduled',NULL,NULL,NULL);
+
+-- ================================================================
+-- Sample import: FIFA World Cup 2022 (Round of 16), imported via the
+-- api-sports.io shape. Visible in the public switcher; real R16 matchups.
+-- ================================================================
+DELETE FROM "match"      WHERE "tournamentId" = 'wc_2022';
+DELETE FROM "team"       WHERE "tournamentId" = 'wc_2022';
+DELETE FROM "tournament" WHERE "id" = 'wc_2022';
+
+INSERT INTO "tournament"
+ ("id","name","status","bracketSize","currentRound","picksDeadline","championTeamId","visible","featured","joinPolicy","joinCode","isGeneralPool","createdAt")
+VALUES ('wc_2022','FIFA World Cup 2022','active',16,'R16', 1893456000000, NULL, 1, 0, 'open', NULL, 0, 1751500000000);
+
+-- 16 Round-of-16 nations (seeds 1..16 in real matchup order)
+INSERT INTO "team" ("id","tournamentId","name","seed","colorHint","eliminated") VALUES
+ ('wt_1','wc_2022','Netherlands',1,'#FF7A1A',0),
+ ('wt_2','wc_2022','USA',2,'#1B4DE4',0),
+ ('wt_3','wc_2022','Argentina',3,'#0FB5C9',0),
+ ('wt_4','wc_2022','Australia',4,'#F5C518',0),
+ ('wt_5','wc_2022','France',5,'#1B4DE4',0),
+ ('wt_6','wc_2022','Poland',6,'#E5322D',0),
+ ('wt_7','wc_2022','England',7,'#EDEDED',0),
+ ('wt_8','wc_2022','Senegal',8,'#33C14E',0),
+ ('wt_9','wc_2022','Japan',9,'#E5322D',0),
+ ('wt_10','wc_2022','Croatia',10,'#E5322D',0),
+ ('wt_11','wc_2022','Brazil',11,'#F5C518',0),
+ ('wt_12','wc_2022','South Korea',12,'#E5322D',0),
+ ('wt_13','wc_2022','Morocco',13,'#33C14E',0),
+ ('wt_14','wc_2022','Spain',14,'#E5322D',0),
+ ('wt_15','wc_2022','Portugal',15,'#7A3CF0',0),
+ ('wt_16','wc_2022','Switzerland',16,'#E5322D',0);
+
+-- Round of 16 with the real matchups; later rounds empty, all playable.
+INSERT INTO "match"
+ ("id","tournamentId","round","slot","homeTeamId","awayTeamId","homeScore","awayScore","wentToPenalties","penaltyWinnerTeamId","status","kickoffAt","feedsIntoMatchId","feedsIntoSide")
+VALUES
+ ('wm_r16_0','wc_2022','R16',0,'wt_1','wt_2',  NULL,NULL,0,NULL,'scheduled',NULL,'wm_qf_0','home'),
+ ('wm_r16_1','wc_2022','R16',1,'wt_3','wt_4',  NULL,NULL,0,NULL,'scheduled',NULL,'wm_qf_0','away'),
+ ('wm_r16_2','wc_2022','R16',2,'wt_5','wt_6',  NULL,NULL,0,NULL,'scheduled',NULL,'wm_qf_1','home'),
+ ('wm_r16_3','wc_2022','R16',3,'wt_7','wt_8',  NULL,NULL,0,NULL,'scheduled',NULL,'wm_qf_1','away'),
+ ('wm_r16_4','wc_2022','R16',4,'wt_9','wt_10', NULL,NULL,0,NULL,'scheduled',NULL,'wm_qf_2','home'),
+ ('wm_r16_5','wc_2022','R16',5,'wt_11','wt_12',NULL,NULL,0,NULL,'scheduled',NULL,'wm_qf_2','away'),
+ ('wm_r16_6','wc_2022','R16',6,'wt_13','wt_14',NULL,NULL,0,NULL,'scheduled',NULL,'wm_qf_3','home'),
+ ('wm_r16_7','wc_2022','R16',7,'wt_15','wt_16',NULL,NULL,0,NULL,'scheduled',NULL,'wm_qf_3','away'),
+ ('wm_qf_0','wc_2022','R8',0,NULL,NULL,NULL,NULL,0,NULL,'scheduled',NULL,'wm_sf_0','home'),
+ ('wm_qf_1','wc_2022','R8',1,NULL,NULL,NULL,NULL,0,NULL,'scheduled',NULL,'wm_sf_0','away'),
+ ('wm_qf_2','wc_2022','R8',2,NULL,NULL,NULL,NULL,0,NULL,'scheduled',NULL,'wm_sf_1','home'),
+ ('wm_qf_3','wc_2022','R8',3,NULL,NULL,NULL,NULL,0,NULL,'scheduled',NULL,'wm_sf_1','away'),
+ ('wm_sf_0','wc_2022','R4',0,NULL,NULL,NULL,NULL,0,NULL,'scheduled',NULL,'wm_final','home'),
+ ('wm_sf_1','wc_2022','R4',1,NULL,NULL,NULL,NULL,0,NULL,'scheduled',NULL,'wm_final','away'),
+ ('wm_final','wc_2022','R2',0,NULL,NULL,NULL,NULL,0,NULL,'scheduled',NULL,NULL,NULL);
